@@ -1,10 +1,8 @@
 """
 Plex Assistant is a component for Home Assistant to add control of Plex to
 Google Assistant with a little help from IFTTT or DialogFlow.
-
 Play to Google Cast devices or Plex Clients using fuzzy searches for media and
 cast device names.
-
 https://github.com/maykar/plex_assistant
 """
 
@@ -63,7 +61,7 @@ async def async_setup(hass, config):
         fuzzy,
         get_libraries,
         media_error,
-        video_selection,
+        media_selection,
     )
 
     conf = config[DOMAIN]
@@ -166,6 +164,7 @@ async def async_setup(hass, config):
         if command["control"]:
             control = command["control"]
             if client:
+                cast.proxyThroughServer()
                 plex_c = cast
             else:
                 plex_c = PlexController()
@@ -185,7 +184,7 @@ async def async_setup(hass, config):
 
         try:
             result = find_media(command, command["media"], PA.lib)
-            media = video_selection(command, result["media"], result["library"])
+            media = media_selection(command, result["media"], result["library"])
         except Exception:
             error = media_error(command, localize)
             if tts_error:
@@ -205,6 +204,7 @@ async def async_setup(hass, config):
 
         if client:
             _LOGGER.debug("Client: %s", cast)
+            cast.proxyThroughServer()
             plex_c = cast
             plex_c.playMedia(media)
         else:
@@ -236,3 +236,4 @@ def update_sensor(hass):
     }
     sensor = "sensor.plex_assistant_devices"
     hass.states.async_set(sensor, state, attributes)
+

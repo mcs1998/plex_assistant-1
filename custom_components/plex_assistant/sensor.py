@@ -1,7 +1,6 @@
 """
 Companion Sensor for Plex Assistant
 https://github.com/maykar/plex_assistant
-
 """
 from . import PA
 from homeassistant.helpers.entity import Entity
@@ -40,3 +39,4 @@ class PlexAssistantSensor(Entity):
             'Cast Devices': devicelist or 'None',
             'Plex Clients': clients or 'None'
         }}
+
