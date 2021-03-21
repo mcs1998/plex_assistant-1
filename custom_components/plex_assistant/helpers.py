@@ -3,7 +3,7 @@ from datetime import datetime
 
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process as fw
-
+import plexapi
 from . import PA
 
 
@@ -26,13 +26,21 @@ def get_libraries(plex):
     movies.sort(key=lambda x: x.addedAt or x.updatedAt)
     shows = plex.search(libtype="show")
     shows.sort(key=lambda x: x.addedAt or x.updatedAt)
-
+    tracks = plex.search(libtype="track")
+    albums = plex.search(libtype="album")
+    artists = plex.search(libtype="artist")
     return {
         "movies": movies,
         "movie_titles": [movie.title for movie in movies],
         "shows": shows,
         "show_titles": [show.title for show in shows],
         "updated": datetime.now(),
+        "tracks": tracks,
+        "track_titles": [track.title for track in tracks],
+        "albums": albums,
+        "album_titles": [album.title for album in albums],
+        "artists": artists,
+        "artist_names": [artist.title for artist in artists],
     }
 
 
@@ -44,7 +52,7 @@ def fuzzy(media, lib, scorer=fuzz.QRatio):
         return ["", 0]
 
 
-def video_selection(option, media, lib):
+def media_selection(option, media, lib):
     """ Return media item.
     Narrow it down if season, episode, unwatched, or latest is used
     """
@@ -111,9 +119,15 @@ def find_media(selected, media, lib):
     if selected["library"]:
         if selected["library"][0].type == 'show':
             section = "show_titles"
-        else:
+        elif selected["library"][0].type == 'movie':
             section = "movie_titles"
-
+        elif selected["library"][0].type == 'track':
+            section = "track_titles"
+        elif selected["library"][0].type == 'album':
+            section = "album_titles"
+        else:
+            section = "artist_names"
+            
         result = "" if not media else fuzzy(
             media, lib[section], fuzz.WRatio)[0]
         library = selected["library"]
@@ -256,6 +270,14 @@ def get_library(phrase, lib, localize, devices):
         return lib["shows"]
     elif any(word in phrase for word in localize["movies"]):
         return lib["movies"]
+    elif any(word in phrase for word in localize["tracks"]):
+        return lib["tracks"]
+    elif any(word in phrase for word in localize["albums"]):
+        return lib["albums"]
+    elif any(word in phrase for word in localize["artists"]):
+        return lib["artists"]
+    else:
+        return lib["artists"]
     return None
 
 
@@ -326,3 +348,4 @@ def media_error(command, localize):
         )
     error += localize["not_found"] + "."
     return error.capitalize()
+
